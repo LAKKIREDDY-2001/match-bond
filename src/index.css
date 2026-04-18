@@ -1,0 +1,78 @@
+:root {
+  --bg: #f3efe7;
+  --panel: rgba(255, 251, 244, 0.88);
+  --panel-alt: rgba(247, 242, 232, 0.95);
+  --card: rgba(255, 255, 255, 0.72);
+  --card-active: rgba(255, 243, 210, 0.88);
+  --surface: rgba(246, 240, 229, 0.9);
+  --border: rgba(100, 72, 39, 0.14);
+  --border-strong: rgba(18, 86, 140, 0.22);
+  --heading: #172033;
+  --text: #4f5a69;
+  --muted-strong: #7b6140;
+  --accent: #fed05c;
+  --accent-strong: #c78d12;
+  --shadow-soft: 0 18px 50px rgba(45, 33, 12, 0.08);
+  --display: "Avenir Next", "Segoe UI", sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", sans-serif;
+
+  font-family: var(--body);
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(255, 205, 99, 0.22), transparent 28%),
+    radial-gradient(circle at 85% 18%, rgba(52, 147, 204, 0.16), transparent 18%),
+    linear-gradient(180deg, #f5f1e8 0%, #ece7dc 100%);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+a,
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+a {
+  color: inherit;
+}
+
+#root {
+  width: min(1260px, 100%);
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+p {
+  color: var(--text);
+}
