@@ -16,6 +16,7 @@ dist-ssr
 .config/
 .firebase/
 .gcloud/
+.gh/
 
 # Editor directories and files
 .vscode/*
