@@ -62,11 +62,11 @@ export const quickChants = [
 export const demoRooms: MatchRoom[] = [
   {
     id: 'ipl-room',
-    fixture: 'Chennai Chargers vs Mumbai Meteors',
+    fixture: 'RCB vs DC',
     stage: 'LIVE · 18.2 overs',
     score: '174/5',
     chase: 'Need 18 from 10 balls',
-    venue: 'M. A. Chidambaram Stadium',
+    venue: 'M. Chinnaswamy Stadium',
     mood: 'Death-over chaos',
     activeFans: 3841,
     reactions: [

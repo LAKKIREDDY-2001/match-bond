@@ -4,6 +4,7 @@ import { Float, OrbitControls, Sparkles, Stars } from '@react-three/drei'
 import type { Mesh } from 'three'
 import { ensureAuth, persistRoom, seedRoomsIfEmpty, subscribeToRooms } from './lib/matchBondStore'
 import { cricketSignals, demoRooms, quickChants, type MatchRoom } from './lib/matchRooms'
+import { fetchFantasySummary } from './lib/cricApi'
 import './App.css'
 
 function SpinningBall() {
@@ -118,6 +119,9 @@ function App() {
   const [momentTitleDraft, setMomentTitleDraft] = useState('New wicket shifts the chase')
   const [momentSummaryDraft, setMomentSummaryDraft] = useState('The latest ball changed the whole room mood and sparked instant reaction.')
   const [momentPromptDraft, setMomentPromptDraft] = useState('Does the batting side still control this finish?')
+  const [cricApiMatchId, setCricApiMatchId] = useState('')
+  const [cricApiKey, setCricApiKey] = useState('')
+  const [isFetchingCricApi, setIsFetchingCricApi] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -133,11 +137,9 @@ function App() {
       } catch (error) {
         if (!cancelled) {
           setDataSource('Local fallback mode')
-          setStatusMessage(
-            error instanceof Error
-              ? `Firebase setup fallback: ${error.message}`
-              : 'Firebase setup fallback mode.',
-          )
+          setStatusMessage('Using local fallback (Firebase Auth disabled in console).')
+          // Initialize with demo data locally if Firebase fails
+          setRooms(demoRooms)
         }
       }
     }
@@ -211,7 +213,7 @@ function App() {
       }),
     )
 
-    if (nextRoom) {
+    if (nextRoom && dataSource !== 'Local fallback mode') {
       void persistRoom(nextRoom).catch((error) => {
         setStatusMessage(
           error instanceof Error ? `Firebase update failed: ${error.message}` : 'Firebase update failed.',
@@ -266,6 +268,67 @@ function App() {
       mood: liveMoodDraft.trim() || room.mood,
     }))
     setStatusMessage('Live scoreboard updated.')
+  }
+
+  async function handleFetchCricApi() {
+    if (!cricApiMatchId.trim()) {
+      setStatusMessage('Please enter a CricAPI Match ID.')
+      return
+    }
+    if (!cricApiKey.trim()) {
+      setStatusMessage('Please enter a CricAPI Key.')
+      return
+    }
+
+    setIsFetchingCricApi(true)
+    setStatusMessage('Fetching live data from CricAPI...')
+
+    try {
+      const result = await fetchFantasySummary(cricApiMatchId.trim(), cricApiKey.trim())
+      if (result && 'error' in result) {
+        setStatusMessage(`CricAPI Error: ${result.error}`)
+        return
+      }
+      
+      if (result && result.data) {
+        // Extract basic data to set the score and stage
+        // Format of result is complex, we will try to make a basic summary if available
+        let newScore = liveScoreDraft
+        let newStage = liveStageDraft
+
+        if (result.data.batting && result.data.batting.length > 0) {
+           const latestInning = result.data.batting[result.data.batting.length - 1]
+           newStage = latestInning.title || 'Live Match'
+           
+           // Calculate total runs and wickets for this inning
+           let totalRuns = 0
+           let totalWickets = 0
+           if (latestInning.scores && latestInning.scores[0]) {
+             latestInning.scores[0].forEach(batsman => {
+                if (batsman.R && !isNaN(parseInt(batsman.R))) {
+                  totalRuns += parseInt(batsman.R)
+                }
+                if (batsman['dismissal-info'] && batsman['dismissal-info'].toLowerCase() !== 'not out' && batsman['dismissal-info'] !== '') {
+                  totalWickets++
+                }
+             })
+           }
+           if (totalRuns > 0) {
+             newScore = `${totalRuns}/${totalWickets}`
+           }
+        }
+        
+        setLiveStageDraft(newStage)
+        setLiveScoreDraft(newScore)
+        setStatusMessage('CricAPI data fetched and drafted!')
+      } else {
+         setStatusMessage('Failed to fetch valid data from CricAPI.')
+      }
+    } catch (err) {
+      setStatusMessage('Error fetching from CricAPI.')
+    } finally {
+      setIsFetchingCricApi(false)
+    }
   }
 
   function handlePushMoment() {
@@ -453,6 +516,35 @@ function App() {
               <h3>Live scorer controls</h3>
               <span>Update score and match events here</span>
             </div>
+
+            <div className="cricapi-fetch-bar" style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <input
+                type="text"
+                placeholder="CricAPI Key"
+                value={cricApiKey}
+                onChange={(e) => setCricApiKey(e.target.value)}
+                className="scorer-input"
+                style={{ flex: 1 }}
+              />
+              <input
+                type="text"
+                placeholder="CricAPI Match ID"
+                value={cricApiMatchId}
+                onChange={(e) => setCricApiMatchId(e.target.value)}
+                className="scorer-input"
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                className="send-button"
+                onClick={handleFetchCricApi}
+                disabled={isFetchingCricApi}
+                style={{ padding: '0 16px', whiteSpace: 'nowrap' }}
+              >
+                {isFetchingCricApi ? 'Fetching...' : 'Fetch CricAPI'}
+              </button>
+            </div>
+
             <div className="scorer-grid">
               <label className="field-block">
                 <span>Stage</span>
